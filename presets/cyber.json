@@ -1,0 +1,9 @@
+{
+  "palette": "#00d2ff",
+  "size": 2.8,
+  "opacity": 0.78,
+  "velocity": 1.2,
+  "bloom": 0.6,
+  "motionBlur": 0.35,
+  "shaderStrength": 0.8
+}

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author" content="Moonoo" />
+    <meta name="description" content="Interactive, physics-driven particle experience." />
+    <title>Interactive Particle Page</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#control-panel">Skip to controls</a>
+    <main class="app" aria-label="Interactive particle canvas app">
+      <section class="canvas-shell" aria-live="polite">
+        <canvas id="particle-canvas" aria-label="Interactive particle canvas" role="img"></canvas>
+        <div id="loading-overlay" class="overlay" aria-hidden="true">
+          <p id="loading-text">Loading assets…</p>
+          <div class="progress"><span id="loading-progress"></span></div>
+        </div>
+      </section>
+
+      <aside id="control-panel" class="control-panel" aria-label="Particle controls">
+        <button id="toggle-panel" class="icon-btn" aria-expanded="true" aria-controls="panel-content">⚙️</button>
+        <div id="panel-content">
+          <header>
+            <h1 data-i18n="title">Interactive Particle Page</h1>
+            <p data-i18n="subtitle">Immersive multi-input particle playground</p>
+          </header>
+
+          <section>
+            <h2 data-i18n="particle_basic">Particle Basic</h2>
+            <label>Size <input id="size" type="range" min="1" max="8" value="3" /></label>
+            <label>Opacity <input id="opacity" type="range" min="0.1" max="1" step="0.1" value="0.8" /></label>
+            <label>Velocity <input id="velocity" type="range" min="0.2" max="3" step="0.1" value="1" /></label>
+          </section>
+
+          <section>
+            <h2 data-i18n="visual">Visual</h2>
+            <label>Palette <input id="palette" type="color" value="#00d2ff" /></label>
+            <label>Neon <input id="neon" type="range" min="0" max="2" step="0.1" value="1" /></label>
+            <label>Contrast <button id="contrast-btn" class="icon-btn" aria-pressed="false">HC</button></label>
+          </section>
+
+          <section>
+            <h2 data-i18n="behavior">Behavior</h2>
+            <label>Attract Radius <input id="attract-radius" type="range" min="20" max="260" value="120" /></label>
+            <label>Link Thickness <input id="link-thickness" type="range" min="0" max="4" step="0.2" value="1.2" /></label>
+            <label>Spawn Limit <input id="spawn-limit" type="number" min="100" max="4000" value="1200" /></label>
+          </section>
+
+          <section>
+            <h2 data-i18n="effects">Effects</h2>
+            <label>Bloom <input id="bloom" type="range" min="0" max="1" step="0.1" value="0.4" /></label>
+            <label>Motion Blur <input id="motion-blur" type="range" min="0" max="1" step="0.1" value="0.2" /></label>
+            <label>Shader Strength <input id="shader-strength" type="range" min="0" max="1" step="0.1" value="0.5" /></label>
+          </section>
+
+          <section>
+            <h2 data-i18n="performance">Performance</h2>
+            <label>FPS <input id="fps-limit" type="number" min="30" max="120" value="60" /></label>
+            <label><input id="adaptive" type="checkbox" checked /> Adaptive Particle Count</label>
+          </section>
+
+          <section>
+            <h2 data-i18n="language">Language</h2>
+            <select id="language-select" aria-label="Language selector">
+              <option value="en-US">English</option>
+              <option value="zh-CN">中文</option>
+            </select>
+          </section>
+
+          <section>
+            <h2>Preset</h2>
+            <div class="row">
+              <button data-preset="cute">Cute</button>
+              <button data-preset="cyber">Cyber</button>
+              <button data-preset="minimal">Minimal</button>
+            </div>
+          </section>
+
+          <section>
+            <h2 data-i18n="save_share">Save & Share</h2>
+            <div class="row">
+              <button id="save-btn">Save</button>
+              <button id="load-btn">Load</button>
+              <button id="export-btn">Export JSON</button>
+            </div>
+            <textarea id="share-output" rows="4" aria-label="Config share output"></textarea>
+          </section>
+
+          <section>
+            <h2>Audio</h2>
+            <label>Volume <input id="volume" type="range" min="0" max="1" step="0.05" value="0.5" /></label>
+            <button id="mute">Mute</button>
+          </section>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
