@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moonoo 粒子实验室</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif']
+          },
+          animation: {
+            pulseSlow: 'pulse 30s ease-in-out infinite',
+            pawBounce: 'pawBounce 2s ease-in-out infinite',
+            neonFlicker: 'neonFlicker 4s ease-in-out infinite'
+          },
+          keyframes: {
+            pawBounce: {
+              '0%, 80%, 100%': { transform: 'scale(1)' },
+              '90%': { transform: 'scale(1.2)' }
+            },
+            neonFlicker: {
+              '0%, 100%': { opacity: '1' },
+              '50%': { opacity: '.82' },
+              '52%': { opacity: '.96' }
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root {
+      --ease-main: cubic-bezier(0.4, 0, 0.2, 1);
+      --panel-bg: rgba(255,255,255,.1);
+      --text: #e7ebff;
+      --glow: #7f8cff;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      color: var(--text);
+      background: #060714;
+    }
+
+    body {
+      font-family: Inter, 'Noto Sans SC', sans-serif;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: -20%;
+      pointer-events: none;
+      filter: saturate(125%);
+    }
+
+    .bg-l1 { animation: drift1 26s linear infinite; background: radial-gradient(circle at 20% 40%, rgba(130,90,255,.4), transparent 55%), radial-gradient(circle at 75% 20%, rgba(40,190,255,.34), transparent 45%); }
+    .bg-l2 { animation: drift2 20s linear infinite reverse; background: radial-gradient(circle at 45% 80%, rgba(255,80,180,.22), transparent 45%), radial-gradient(circle at 60% 30%, rgba(0,255,190,.15), transparent 40%); mix-blend-mode: screen; }
+    .bg-l3 { animation: drift3 34s linear infinite; background: conic-gradient(from 20deg at 50% 50%, rgba(90,150,255,.07), rgba(255,85,170,.08), rgba(95,255,230,.06), rgba(90,150,255,.07)); }
+    .bg-l4 { animation: drift4 48s linear infinite reverse; background: radial-gradient(circle at 10% 90%, rgba(255,150,100,.15), transparent 35%), radial-gradient(circle at 90% 90%, rgba(90,220,255,.1), transparent 45%); }
+
+    @keyframes drift1 { from { transform: translate(0,0) rotate(0);} to { transform: translate(4%, -3%) rotate(10deg);} }
+    @keyframes drift2 { from { transform: translate(0,0) rotate(0);} to { transform: translate(-5%, 4%) rotate(-16deg);} }
+    @keyframes drift3 { from { transform: scale(1);} to { transform: scale(1.12);} }
+    @keyframes drift4 { from { transform: translate(0,0);} to { transform: translate(7%, -5%);} }
+
+    #particleCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    .crt::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.02),
+        rgba(255,255,255,.02) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      opacity: .28;
+      z-index: 10;
+    }
+
+    .vignette::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 45%, rgba(0,0,0,.44) 100%);
+      z-index: 9;
+    }
+
+    .glass {
+      background: var(--panel-bg);
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(14px) saturate(130%);
+      box-shadow: 0 0 0 1px rgba(130, 170, 255, .15) inset, 0 14px 40px rgba(5,8,30,.45);
+    }
+
+    .neo-btn {
+      border-radius: .75rem;
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.06));
+      box-shadow: 6px 6px 16px rgba(0,0,0,.32), -5px -5px 14px rgba(255,255,255,.05);
+      transition: transform .2s var(--ease-main), filter .2s var(--ease-main);
+    }
+    .neo-btn:active {
+      transform: scale(.95);
+      filter: brightness(1.1);
+    }
+    .neo-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .panel {
+      transition: transform .5s var(--ease-main);
+    }
+
+    .section-body {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height .45s var(--ease-main), opacity .35s var(--ease-main), margin .35s var(--ease-main);
+    }
+
+    .section.open .section-body {
+      max-height: 460px;
+      opacity: 1;
+      margin-top: .65rem;
+    }
+
+    .section .chev { transition: transform .3s var(--ease-main); }
+    .section.open .chev { transform: rotate(90deg); }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: linear-gradient(45deg,#88b0ff,#c37dff);
+      border: 1px solid rgba(255,255,255,.5);
+      box-shadow: 0 0 12px rgba(136,176,255,.5);
+      cursor: pointer;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: radial-gradient(circle at center, rgba(20,26,68,.9), #05060f);
+      display: grid;
+      place-items: center;
+      transition: opacity .7s ease;
+    }
+
+    .hidden-loading { opacity: 0; pointer-events: none; }
+
+    .glitch {
+      animation: glitch .22s steps(2, end) 2;
+    }
+
+    @keyframes glitch {
+      0% { transform: translate(0,0); filter: hue-rotate(0deg); }
+      20% { transform: translate(4px,-2px); }
+      40% { transform: translate(-4px,2px); }
+      60% { transform: translate(2px,1px); filter: hue-rotate(90deg); }
+      100% { transform: translate(0,0); filter: hue-rotate(0deg); }
+    }
+  </style>
+</head>
+<body class="crt vignette">
+  <div class="bg-layer bg-l1"></div>
+  <div class="bg-layer bg-l2"></div>
+  <div class="bg-layer bg-l3"></div>
+  <div class="bg-layer bg-l4"></div>
+  <canvas id="particleCanvas" aria-label="Interactive particle canvas" role="img"></canvas>
+
+  <header class="fixed top-4 left-4 right-20 z-20 flex items-center justify-between pointer-events-none">
+    <h1 id="title" class="pointer-events-auto text-xl sm:text-2xl font-bold tracking-wide animate-neonFlicker" style="text-shadow:0 0 16px rgba(139,166,255,.65);">Moonoo 粒子实验室</h1>
+    <button id="discoBtn" class="neo-btn pointer-events-auto px-3 py-2 text-xs sm:text-sm">Konami?</button>
+  </header>
+
+  <aside id="panel" class="panel glass fixed right-0 top-0 z-20 h-full w-[88vw] max-w-md p-4 sm:p-5 translate-x-full" aria-label="Control panel">
+    <button id="closePanel" class="neo-btn px-3 py-2 text-sm mb-3"><i class="fa-solid fa-xmark mr-2"></i><span data-i18n="close">关闭</span></button>
+
+    <div class="space-y-3 text-sm">
+      <section class="section open" data-section>
+        <button class="w-full neo-btn p-3 flex justify-between items-center" data-toggle>
+          <span data-i18n="particleSystem">粒子系统</span><i class="fa-solid fa-chevron-right chev"></i>
+        </button>
+        <div class="section-body px-2">
+          <label class="block mt-2"><span data-i18n="count">数量</span> <span id="countLabel">700</span>
+            <input id="particleCount" class="slider w-full" type="range" min="100" max="5000" value="700"></label>
+          <label class="block mt-2"><span data-i18n="shape">形状</span>
+            <select id="shape" class="w-full mt-1 bg-black/30 rounded p-2 border border-white/20">
+              <option value="circle">Circle</option><option value="square">Square</option><option value="star">Star</option><option value="heart">Heart</option><option value="polygon">Polygon</option>
+            </select>
+          </label>
+          <label class="block mt-2"><span data-i18n="polygonSides">多边形边数</span>
+            <input id="polygonSides" class="slider w-full" type="range" min="3" max="10" value="6">
+          </label>
+        </div>
+      </section>
+
+      <section class="section" data-section>
+        <button class="w-full neo-btn p-3 flex justify-between items-center" data-toggle>
+          <span data-i18n="visual">视觉效果</span><i class="fa-solid fa-chevron-right chev"></i>
+        </button>
+        <div class="section-body px-2">
+          <label class="block mt-2"><span data-i18n="bloom">Bloom</span>
+            <input id="bloom" class="slider w-full" type="range" min="0" max="3" step="0.1" value="1.2"></label>
+          <label class="block mt-2"><span data-i18n="bgAlpha">背景透明度</span>
+            <input id="bgAlpha" class="slider w-full" type="range" min="0.02" max="0.3" step="0.01" value="0.08"></label>
+          <label class="block mt-2"><span data-i18n="performance">性能模式</span>
+            <select id="perfMode" class="w-full mt-1 bg-black/30 rounded p-2 border border-white/20"><option value="auto">Auto</option><option value="high">High</option><option value="low">Low</option></select>
+          </label>
+        </div>
+      </section>
+
+      <section class="section" data-section>
+        <button class="w-full neo-btn p-3 flex justify-between items-center" data-toggle>
+          <span data-i18n="audio">音频控制</span><i class="fa-solid fa-chevron-right chev"></i>
+        </button>
+        <div class="section-body px-2">
+          <label class="block mt-2"><span data-i18n="volume">音量</span>
+            <input id="volume" class="slider w-full" type="range" min="0" max="1" step="0.01" value="0.25"></label>
+          <label class="block mt-2"><span data-i18n="upload">上传样本</span>
+            <input id="audioUpload" type="file" accept="audio/*" class="w-full text-xs"></label>
+        </div>
+      </section>
+
+      <section class="section" data-section>
+        <button class="w-full neo-btn p-3 flex justify-between items-center" data-toggle>
+          <span data-i18n="language">语言设置</span><i class="fa-solid fa-chevron-right chev"></i>
+        </button>
+        <div class="section-body px-2 flex gap-2">
+          <button class="neo-btn px-3 py-2 flex-1" data-lang="zh">中文</button>
+          <button class="neo-btn px-3 py-2 flex-1" data-lang="en">English</button>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <button id="openPanel" class="fixed top-4 right-4 z-20 neo-btn px-3 py-2" aria-label="open control panel"><i class="fa-solid fa-sliders"></i></button>
+
+  <footer class="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 text-xs sm:text-sm glass rounded-full px-4 py-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_18px_rgba(125,190,255,.45)]">
+    <span class="animate-pulseSlow">© 2026 Moonoo <span class="inline-block animate-pawBounce">🐾</span></span>
+  </footer>
+
+  <div id="toast" class="fixed bottom-16 left-1/2 -translate-x-1/2 z-20 text-xs glass px-3 py-2 rounded opacity-0 pointer-events-none transition-opacity"></div>
+
+  <div id="loading" aria-live="polite">
+    <div class="w-[84vw] max-w-md text-center">
+      <div class="text-2xl font-bold mb-4">Moonoo Loading...</div>
+      <div class="h-3 rounded-full bg-white/10 overflow-hidden border border-white/20">
+        <div id="loadBar" class="h-full bg-gradient-to-r from-pink-400 via-cyan-400 to-purple-400 w-0"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const i18n = {
+      zh: {
+        close: '关闭', particleSystem: '粒子系统', count: '数量', shape: '形状', polygonSides: '多边形边数',
+        visual: '视觉效果', bloom: 'Bloom 强度', bgAlpha: '背景透明度', performance: '性能模式',
+        audio: '音频控制', volume: '音量', upload: '上传样本', language: '语言设置',
+        heart: '检测到爱心手势 ❤️', disco: 'Disco 模式已激活!'
+      },
+      en: {
+        close: 'Close', particleSystem: 'Particle System', count: 'Count', shape: 'Shape', polygonSides: 'Polygon Sides',
+        visual: 'Visual Effects', bloom: 'Bloom', bgAlpha: 'Background Alpha', performance: 'Performance Mode',
+        audio: 'Audio', volume: 'Volume', upload: 'Upload Sample', language: 'Language',
+        heart: 'Heart gesture detected ❤️', disco: 'Disco mode activated!'
+      }
+    };
+
+    let lang = 'zh';
+    const state = {
+      count: 700,
+      shape: 'circle',
+      polygonSides: 6,
+      bloom: 1.2,
+      bgAlpha: 0.08,
+      perf: 'auto',
+      windX: 0,
+      windY: 0,
+      volume: 0.25,
+      pinchScale: 1,
+      disco: false
+    };
+
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    let w, h, dpr;
+
+    const particles = [];
+    const trails = [];
+    const blasts = [];
+    const links = [];
+
+    const pointer = { x: 0, y: 0, down: false, moved: false, hover: false, lastX: 0, lastY: 0 };
+
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    let uploadedBuffer = null;
+
+    function playSynth(freq = 220, dur = .08, type = 'sine') {
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      g.gain.value = 0;
+      g.gain.linearRampToValueAtTime(state.volume * 0.6, ac.currentTime + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+      osc.connect(g).connect(ac.destination);
+      osc.start();
+      osc.stop(ac.currentTime + dur);
+    }
+
+    function playArp() {
+      [261.63, 329.63, 392].forEach((f, i) => setTimeout(() => playSynth(f, .1, 'triangle'), i * 70));
+    }
+
+    function playSample() {
+      if (!uploadedBuffer) return;
+      const src = ac.createBufferSource();
+      const g = ac.createGain();
+      g.gain.value = state.volume;
+      src.buffer = uploadedBuffer;
+      src.connect(g).connect(ac.destination);
+      src.start();
+    }
+
+    class Particle {
+      constructor(x = Math.random() * w, y = Math.random() * h, emoji = '') {
+        this.x = x; this.y = y;
+        this.vx = (Math.random() - .5) * 1.8;
+        this.vy = (Math.random() - .5) * 1.8;
+        this.size = Math.random() * 3 + 1.2;
+        this.life = 1;
+        this.mass = Math.random() * 1.2 + .4;
+        this.friction = .987;
+        this.bounce = .92;
+        this.color = `hsla(${Math.random()*360},90%,70%,.9)`;
+        this.emoji = emoji;
+      }
+      update() {
+        const dx = pointer.x - this.x;
+        const dy = pointer.y - this.y;
+        const dist = Math.hypot(dx, dy) + .01;
+
+        if (pointer.hover) {
+          const force = Math.min(120 / dist, 2.2);
+          const swirl = 0.008;
+          this.vx += (dx / dist) * force * 0.04 + (-dy) * swirl / dist;
+          this.vy += (dy / dist) * force * 0.04 + dx * swirl / dist;
+        }
+
+        this.vx += state.windX * 0.005;
+        this.vy += state.windY * 0.005;
+
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > w) { this.vx *= -this.bounce; playSynth(180 + this.size * 50, .05, 'square'); }
+        if (this.y < 0 || this.y > h) { this.vy *= -this.bounce; playSynth(220 + this.size * 45, .05, 'square'); }
+
+        this.x = Math.max(0, Math.min(w, this.x));
+        this.y = Math.max(0, Math.min(h, this.y));
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        if (this.emoji) {
+          ctx.font = `${Math.max(10, this.size * 4)}px sans-serif`;
+          ctx.fillText(this.emoji, -5, 5);
+          ctx.restore();
+          return;
+        }
+        ctx.fillStyle = this.color;
+        const size = this.size * state.pinchScale;
+
+        switch (state.shape) {
+          case 'square':
+            ctx.fillRect(-size, -size, size * 2, size * 2); break;
+          case 'star': drawStar(size * 2.2, size); break;
+          case 'heart': drawHeart(size * 1.8); break;
+          case 'polygon': drawPoly(size * 2, state.polygonSides); break;
+          default:
+            ctx.beginPath(); ctx.arc(0, 0, size, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    function drawStar(outer, inner) {
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 ? inner : outer;
+        const a = (Math.PI / 5) * i - Math.PI / 2;
+        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+      }
+      ctx.closePath(); ctx.fill();
+    }
+    function drawHeart(size) {
+      ctx.beginPath();
+      ctx.moveTo(0, size * 0.3);
+      ctx.bezierCurveTo(size, -size, size * 2, size * 0.8, 0, size * 1.9);
+      ctx.bezierCurveTo(-size * 2, size * 0.8, -size, -size, 0, size * 0.3);
+      ctx.fill();
+    }
+    function drawPoly(r, sides) {
+      ctx.beginPath();
+      for (let i = 0; i < sides; i++) {
+        const a = (Math.PI * 2 / sides) * i;
+        const px = Math.cos(a) * r;
+        const py = Math.sin(a) * r;
+        i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+      }
+      ctx.closePath(); ctx.fill();
+    }
+
+    function initParticles(n = state.count) {
+      particles.length = 0;
+      for (let i = 0; i < n; i++) particles.push(new Particle());
+      for (let i = 0; i < 8; i++) particles.push(new Particle(Math.random() * w, Math.random() * h, Math.random() > .5 ? '😊' : '😲'));
+    }
+
+    function drawLinks() {
+      links.length = 0;
+      const maxDist = state.perf === 'low' ? 50 : 80;
+      for (let i = 0; i < particles.length; i += 2) {
+        for (let j = i + 1; j < particles.length; j += 3) {
+          const a = particles[i], b = particles[j];
+          if (a.emoji || b.emoji) continue;
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < maxDist) {
+            const alpha = 1 - d / maxDist;
+            links.push([a, b, alpha]);
+            if (Math.random() < 0.0006) playArp();
+          }
+        }
+      }
+
+      links.forEach(([a, b, alpha]) => {
+        const crosses = lineNearPointer(a.x, a.y, b.x, b.y, pointer.x, pointer.y, 18);
+        if (crosses && pointer.hover) {
+          for (let i = 0; i < 3; i++) trails.push({ x: pointer.x, y: pointer.y, vx: (Math.random()-.5)*3, vy:(Math.random()-.5)*3, life: 1, color:'#ffc7e8' });
+          return;
+        }
+        ctx.strokeStyle = `rgba(130,190,255,${alpha * .6})`;
+        ctx.lineWidth = 1.2;
+        ctx.shadowColor = 'rgba(120,180,255,.7)';
+        ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      });
+    }
+
+    function lineNearPointer(x1,y1,x2,y2,px,py,t){
+      const A = px - x1, B = py - y1, C = x2 - x1, D = y2 - y1;
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      let p = dot / lenSq;
+      p = Math.max(0, Math.min(1, p));
+      const lx = x1 + p * C, ly = y1 + p * D;
+      return Math.hypot(px - lx, py - ly) < t;
+    }
+
+    function blast(x, y) {
+      blasts.push({ x, y, r: 1, a: 1 });
+      for (let i = 0; i < 60; i++) trails.push({ x, y, vx: Math.cos(i) * Math.random() * 4, vy: Math.sin(i) * Math.random() * 4, life: 1, color: `hsla(${Math.random()*360},100%,70%,1)` });
+      playSample();
+    }
+
+    function fountain() {
+      for (let i = 0; i < 90; i++) {
+        const p = new Particle(w / 2, h - 30);
+        p.vx = (Math.random() - .5) * 4;
+        p.vy = -Math.random() * 6 - 2;
+        particles.push(p);
+      }
+    }
+
+    function render(t) {
+      requestAnimationFrame(render);
+      const bgAlpha = state.disco ? .2 : state.bgAlpha;
+      ctx.fillStyle = `rgba(6,7,20,${bgAlpha})`;
+      ctx.fillRect(0, 0, w, h);
+
+      if (state.disco) ctx.filter = `hue-rotate(${(t/10)%360}deg) saturate(1.4)`;
+      else ctx.filter = `blur(0px) brightness(${1 + state.bloom * 0.06})`;
+
+      particles.forEach(p => { p.update(); p.draw(); });
+      drawLinks();
+
+      for (let i = trails.length - 1; i >= 0; i--) {
+        const tr = trails[i];
+        tr.x += tr.vx; tr.y += tr.vy; tr.life -= .02;
+        ctx.fillStyle = tr.color.replace('1)', `${tr.life})`).replace('rgb', 'rgba');
+        ctx.fillRect(tr.x, tr.y, 2, 2);
+        if (tr.life <= 0) trails.splice(i, 1);
+      }
+
+      for (let i = blasts.length - 1; i >= 0; i--) {
+        const b = blasts[i];
+        b.r += 4; b.a -= .02;
+        ctx.strokeStyle = `rgba(255,255,255,${b.a})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.stroke();
+        if (b.a <= 0) blasts.splice(i, 1);
+      }
+
+      ctx.filter = 'none';
+    }
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, state.perf === 'low' ? 1 : 1.8);
+      w = innerWidth; h = innerHeight;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function setLang(next) {
+      lang = next;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = i18n[lang][el.dataset.i18n];
+      });
+      toast(i18n[lang].language + ' ✓');
+      spellText();
+    }
+
+    function spellText() {
+      const text = lang === 'zh' ? '月' : 'M';
+      for (let i = 0; i < Math.min(180, particles.length); i++) {
+        const p = particles[i];
+        const row = Math.floor(i / 30), col = i % 30;
+        p.x = w/2 + (col - 15) * 8;
+        p.y = h/2 + (row - 3) * 10;
+        p.color = text === '月' ? 'hsla(340,100%,72%,.9)' : 'hsla(190,100%,75%,.9)';
+      }
+    }
+
+    function toast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.opacity = '1';
+      clearTimeout(t._tt);
+      t._tt = setTimeout(() => t.style.opacity = '0', 1200);
+    }
+
+    let konami = '';
+    const pattern = 'UUDDLRLRBA';
+
+    function bindEvents() {
+      window.addEventListener('resize', resize);
+      canvas.addEventListener('mousemove', e => {
+        pointer.x = e.clientX; pointer.y = e.clientY; pointer.hover = true;
+        if (pointer.down) trails.push({ x: e.clientX, y: e.clientY, vx: (Math.random()-.5)*1.2, vy: (Math.random()-.5)*1.2, life: 1, color: 'rgba(180,230,255,1)' });
+      });
+      canvas.addEventListener('mouseleave', () => pointer.hover = false);
+      canvas.addEventListener('mousedown', () => { pointer.down = true; ac.resume(); });
+      canvas.addEventListener('mouseup', e => { pointer.down = false; blast(e.clientX, e.clientY); });
+
+      let touches = [];
+      canvas.addEventListener('touchstart', (e) => { touches = [...e.touches]; pointer.down = true; }, {passive:true});
+      canvas.addEventListener('touchmove', (e) => {
+        const t = [...e.touches];
+        if (t.length === 2) {
+          const d0 = Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+          const d1 = Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+          state.pinchScale = Math.max(.4, Math.min(2.5, state.pinchScale + (d1 - d0) * 0.003));
+        }
+        if (t[0]) {
+          pointer.x = t[0].clientX; pointer.y = t[0].clientY; pointer.hover = true;
+          for (let i=0;i<4;i++) trails.push({ x: pointer.x, y: pointer.y, vx:Math.random()*2-1, vy:Math.random()*2-1, life:1, color:'rgba(255,200,240,1)' });
+        }
+        touches = t;
+      }, {passive:true});
+      canvas.addEventListener('touchend', () => { pointer.down = false; pointer.hover = false; });
+
+      window.addEventListener('keydown', e => {
+        if (e.code === 'Space') fountain();
+        if (/Digit[1-9]/.test(e.code)) {
+          const map = ['circle','square','star','heart','polygon'];
+          state.shape = map[(Number(e.code.slice(-1)) - 1) % map.length];
+          document.getElementById('shape').value = state.shape;
+        }
+        if (e.code === 'ArrowUp') state.windY -= 2;
+        if (e.code === 'ArrowDown') state.windY += 2;
+        if (e.code === 'ArrowLeft') state.windX -= 2;
+        if (e.code === 'ArrowRight') state.windX += 2;
+
+        const key = ({ArrowUp:'U',ArrowDown:'D',ArrowLeft:'L',ArrowRight:'R',KeyB:'B',KeyA:'A'})[e.code] || '';
+        if (key) {
+          konami = (konami + key).slice(-pattern.length);
+          if (konami === pattern) activateDisco();
+        }
+      });
+
+      document.getElementById('openPanel').onclick = () => document.getElementById('panel').classList.remove('translate-x-full');
+      document.getElementById('closePanel').onclick = () => document.getElementById('panel').classList.add('translate-x-full');
+
+      document.querySelectorAll('[data-toggle]').forEach(btn => {
+        btn.onclick = () => btn.closest('.section').classList.toggle('open');
+      });
+
+      document.getElementById('particleCount').oninput = e => {
+        state.count = +e.target.value;
+        document.getElementById('countLabel').textContent = state.count;
+        initParticles(state.count);
+      };
+      document.getElementById('shape').onchange = e => state.shape = e.target.value;
+      document.getElementById('polygonSides').oninput = e => state.polygonSides = +e.target.value;
+      document.getElementById('bloom').oninput = e => state.bloom = +e.target.value;
+      document.getElementById('bgAlpha').oninput = e => state.bgAlpha = +e.target.value;
+      document.getElementById('perfMode').onchange = e => { state.perf = e.target.value; resize(); };
+      document.getElementById('volume').oninput = e => state.volume = +e.target.value;
+      document.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => setLang(b.dataset.lang));
+      document.getElementById('discoBtn').onclick = activateDisco;
+
+      let path = [];
+      canvas.addEventListener('pointerdown', e => { path = [[e.clientX, e.clientY]]; });
+      canvas.addEventListener('pointermove', e => { if (path.length) path.push([e.clientX, e.clientY]); });
+      canvas.addEventListener('pointerup', () => {
+        if (detectHeart(path)) {
+          particles.forEach((p, i) => {
+            const t = i / particles.length * Math.PI * 2;
+            const x = 16 * Math.pow(Math.sin(t), 3);
+            const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+            p.x = w / 2 + x * 14;
+            p.y = h / 2 - y * 12;
+            p.color = 'hsla(350,95%,65%,.95)';
+          });
+          toast(i18n[lang].heart);
+          playSynth(523, .25, 'sawtooth');
+        }
+        path = [];
+      });
+
+      document.getElementById('audioUpload').onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const arr = await file.arrayBuffer();
+        uploadedBuffer = await ac.decodeAudioData(arr);
+        toast('sample loaded');
+      };
+    }
+
+    function detectHeart(path) {
+      if (path.length < 40) return false;
+      const xs = path.map(p => p[0]), ys = path.map(p => p[1]);
+      const w0 = Math.max(...xs) - Math.min(...xs);
+      const h0 = Math.max(...ys) - Math.min(...ys);
+      const midY = (Math.max(...ys)+Math.min(...ys))/2;
+      const upper = path.filter(([,y])=>y<midY).length;
+      return w0 > 90 && h0 > 90 && upper > path.length * 0.35;
+    }
+
+    function activateDisco() {
+      state.disco = true;
+      document.body.classList.add('glitch');
+      toast(i18n[lang].disco);
+      setTimeout(() => { state.disco = false; document.body.classList.remove('glitch'); }, 6000);
+    }
+
+    function autoTheme() {
+      const hr = new Date().getHours();
+      document.documentElement.style.setProperty('--panel-bg', hr >= 18 || hr < 6 ? 'rgba(18,20,36,.4)' : 'rgba(255,255,255,.12)');
+    }
+
+    async function boot() {
+      autoTheme();
+      resize();
+      initParticles();
+      bindEvents();
+      render(0);
+
+      const bar = document.getElementById('loadBar');
+      for (let i = 0; i <= 100; i += 4) {
+        bar.style.width = i + '%';
+        await new Promise(r => setTimeout(r, 22));
+      }
+      document.getElementById('loading').classList.add('hidden-loading');
+    }
+
+    boot();
+  </script>
+</body>
+</html>
