@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PtcMoo · Interactive Particle Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWix+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkR4j8F2n3w7L+R6W8Xf6tY4u0P4n0i4x0gA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="theme-cute" data-lang="zh">
+    <div id="loadingOverlay" role="status" aria-live="polite" class="loading-overlay">
+      <div class="loading-ring"></div>
+      <div class="loading-particles" aria-hidden="true"></div>
+      <p id="loadingText">初始化粒子宇宙中... 0%</p>
+    </div>
+
+    <main id="app" class="app-shell">
+      <div id="bgLayers" class="bg-layers" aria-hidden="true"></div>
+      <canvas id="webglCanvas" class="fx-canvas" aria-hidden="true"></canvas>
+      <canvas id="particleCanvas" class="particle-canvas" aria-label="Interactive particle scene"></canvas>
+
+      <button id="languageToggle" class="fab language-btn" aria-label="切换语言">
+        <i class="fa-solid fa-language"></i><span>中/EN</span>
+      </button>
+
+      <button id="themeQuickToggle" class="fab theme-btn" aria-label="切换主题">
+        <i class="fa-solid fa-palette"></i>
+      </button>
+
+      <aside id="controlPanel" class="control-panel collapsed" aria-label="粒子控制面板">
+        <button id="panelToggle" class="panel-toggle" aria-expanded="false" aria-controls="panelBody">
+          <i class="fa-solid fa-sliders"></i>
+        </button>
+        <div id="panelBody" class="panel-body" tabindex="0">
+          <h2 data-i18n="panel.title">控制中心</h2>
+          <section>
+            <h3 data-i18n="panel.particle">粒子属性</h3>
+            <label><span data-i18n="field.shape">形状</span><select id="shape"></select></label>
+            <label><span data-i18n="field.count">数量上限</span><input id="count" type="range" min="80" max="900" /></label>
+            <label><span data-i18n="field.size">尺寸范围</span><input id="size" type="range" min="1" max="12" step="0.5" /></label>
+            <label><span data-i18n="field.speed">速度</span><input id="speed" type="range" min="0.2" max="5" step="0.1" /></label>
+            <label><span data-i18n="field.alpha">透明度</span><input id="alpha" type="range" min="0.1" max="1" step="0.05" /></label>
+          </section>
+          <section>
+            <h3 data-i18n="panel.interaction">交互参数</h3>
+            <label><span data-i18n="field.attract">吸引半径</span><input id="attractRadius" type="range" min="40" max="280" /></label>
+            <label><span data-i18n="field.linkDistance">连线距离</span><input id="linkDistance" type="range" min="40" max="240" /></label>
+            <label><span data-i18n="field.spawnRate">生成速率</span><input id="spawnRate" type="range" min="1" max="12" /></label>
+            <label><span data-i18n="field.sound">音量</span><input id="volume" type="range" min="0" max="1" step="0.05" /></label>
+          </section>
+          <section>
+            <h3 data-i18n="panel.fx">后期效果</h3>
+            <label><span data-i18n="field.bloom">光晕</span><input id="bloom" type="range" min="0" max="1" step="0.05" /></label>
+            <label><span data-i18n="field.blur">模糊</span><input id="blur" type="range" min="0" max="1" step="0.05" /></label>
+            <label><span data-i18n="field.glitch">故障</span><input id="glitch" type="range" min="0" max="1" step="0.05" /></label>
+            <label class="toggle-row"><input id="scanline" type="checkbox" /><span data-i18n="field.scanline">扫描线</span></label>
+          </section>
+          <section>
+            <h3 data-i18n="panel.presets">预设与主题</h3>
+            <label><span data-i18n="field.theme">主题</span><select id="theme"></select></label>
+            <div class="panel-actions">
+              <button id="savePreset" data-i18n="action.save">保存预设</button>
+              <button id="loadPreset" data-i18n="action.load">加载预设</button>
+              <button id="resetPreset" data-i18n="action.reset">重置默认</button>
+              <button id="sharePreset" data-i18n="action.share">分享链接</button>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+    </main>
+
+    <footer class="site-footer" aria-label="页面版权信息">
+      <span>© 2026 PtcMoo</span>
+      <i class="fa-solid fa-paw"></i>
+      <span data-i18n="footer.slogan">软萌未来粒子实验室</span>
+    </footer>
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
