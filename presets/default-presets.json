@@ -1,0 +1,47 @@
+{
+  "cute": {
+    "theme": "cute",
+    "shape": "heart",
+    "count": 260,
+    "size": 4,
+    "speed": 1.6,
+    "alpha": 0.8,
+    "attractRadius": 140,
+    "linkDistance": 120,
+    "spawnRate": 4,
+    "bloom": 0.65,
+    "blur": 0.15,
+    "glitch": 0.04,
+    "scanline": false
+  },
+  "cyber": {
+    "theme": "cyber",
+    "shape": "triangle",
+    "count": 320,
+    "size": 3,
+    "speed": 2.4,
+    "alpha": 0.75,
+    "attractRadius": 160,
+    "linkDistance": 150,
+    "spawnRate": 6,
+    "bloom": 0.9,
+    "blur": 0.22,
+    "glitch": 0.35,
+    "scanline": true
+  },
+  "minimal": {
+    "theme": "minimal",
+    "shape": "circle",
+    "count": 180,
+    "size": 2.5,
+    "speed": 1,
+    "alpha": 0.55,
+    "attractRadius": 120,
+    "linkDistance": 100,
+    "spawnRate": 3,
+    "bloom": 0.18,
+    "blur": 0.05,
+    "glitch": 0.02,
+    "scanline": false
+  }
+}
