@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moonoo Particle Playground</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="theme-cute" data-lang="zh">
+    <div id="loading-screen" role="status" aria-live="polite">
+      <div class="loader-card">
+        <div class="loader-paw"><i class="fa-solid fa-paw"></i></div>
+        <p id="loading-text">正在初始化粒子宇宙...</p>
+        <div class="progress-track"><div id="progress-bar"></div></div>
+      </div>
+    </div>
+
+    <main id="app" class="relative min-h-screen overflow-hidden">
+      <div id="bg-layers" aria-hidden="true">
+        <div class="bg-layer layer-1"></div>
+        <div class="bg-layer layer-2"></div>
+        <div class="bg-layer layer-3"></div>
+        <div class="bg-layer layer-4"></div>
+      </div>
+
+      <canvas id="particle-canvas" aria-label="粒子渲染层"></canvas>
+      <canvas id="fx-canvas" aria-label="视觉后期层"></canvas>
+
+      <button
+        id="panel-toggle"
+        class="glass-btn"
+        aria-label="展开控制面板"
+        aria-controls="control-panel"
+        aria-expanded="false"
+      >
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+
+      <aside id="control-panel" class="glass-panel" aria-label="粒子控制面板">
+        <header class="panel-header">
+          <h1 data-i18n="title">Moonoo 粒子工坊</h1>
+          <div class="header-actions">
+            <button id="lang-btn" class="icon-btn" aria-label="切换语言">中/EN</button>
+            <button id="theme-btn" class="icon-btn" aria-label="切换主题"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+          </div>
+        </header>
+
+        <section class="control-group">
+          <h2 data-i18n="particleProps">粒子属性</h2>
+          <label>Shape<select id="shape" aria-label="粒子形状">
+            <option value="circle">Circle</option><option value="rounded">Rounded</option><option value="triangle">Triangle</option><option value="star">Star</option><option value="heart">Heart</option>
+          </select></label>
+          <label>Count <input id="maxParticles" type="range" min="80" max="600" value="260" /></label>
+          <label>Speed <input id="speed" type="range" min="0.2" max="4" step="0.1" value="1.4" /></label>
+          <label>Opacity <input id="opacity" type="range" min="0.2" max="1" step="0.05" value="0.75" /></label>
+          <label>Size <input id="size" type="range" min="1" max="14" value="5" /></label>
+        </section>
+
+        <section class="control-group">
+          <h2 data-i18n="interaction">交互参数</h2>
+          <label>Attract Radius <input id="attractRadius" type="range" min="40" max="260" value="130" /></label>
+          <label>Link Distance <input id="linkDistance" type="range" min="40" max="220" value="110" /></label>
+          <label>Spawn Rate <input id="spawnRate" type="range" min="1" max="14" value="6" /></label>
+          <label>Intensity <input id="interactionStrength" type="range" min="0.2" max="3" step="0.1" value="1.2" /></label>
+        </section>
+
+        <section class="control-group">
+          <h2 data-i18n="postFx">后期效果</h2>
+          <label>Bloom <input id="bloom" type="range" min="0" max="2" step="0.05" value="0.8" /></label>
+          <label>Blur <input id="motionBlur" type="range" min="0" max="1" step="0.02" value="0.25" /></label>
+          <label>Chromatic <input id="chromatic" type="range" min="0" max="1" step="0.02" value="0.3" /></label>
+          <label>Scanline <input id="scanline" type="range" min="0" max="1" step="0.02" value="0.2" /></label>
+          <label class="toggle-line"><span>30 FPS</span><input id="fpsMode" type="checkbox" /><span>60 FPS</span></label>
+        </section>
+
+        <section class="control-group grid-buttons">
+          <button id="reset-btn" class="action-btn" data-i18n="reset">重置</button>
+          <button id="save-btn" class="action-btn" data-i18n="save">保存预设</button>
+          <button id="load-btn" class="action-btn" data-i18n="load">加载预设</button>
+          <button id="export-btn" class="action-btn">Export JSON</button>
+          <label for="import-input" class="action-btn text-center">Import JSON</label>
+          <input id="import-input" type="file" accept="application/json" hidden />
+          <button id="audio-btn" class="action-btn">🔊</button>
+        </section>
+      </aside>
+
+      <div id="toast-root" aria-live="polite" aria-atomic="true"></div>
+
+      <footer>
+        <p><i class="fa-solid fa-paw"></i> 2026 Moonoo</p>
+      </footer>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
